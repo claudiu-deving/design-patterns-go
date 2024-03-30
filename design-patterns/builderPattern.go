@@ -1,11 +1,16 @@
-package main
+/*
+	The initial version of the pattern, I will leave all of the versions to keep a history of how my understanding of the Go language
+	and that of the design patterns evolved over time
+*/
+
+package designPatterns
 
 import (
 	"fmt"
 	"log"
 )
 
-func main() {
+func BuilderDemo() {
 
 	log.SetPrefix("main: ")
 	log.SetFlags(0)
