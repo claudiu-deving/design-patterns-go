@@ -1,15 +1,23 @@
+/*
+	[01.04.2024]
+	I can't figure this one out yet
+*/
+
 package designPatterns
 
 func ObserverPatternPubSubDemo() {
 
-	observer1 := "a"
-	observer2 := "b"
-	subject := "x"
+}
 
-	pubsubs := make(map[any][]any)
-	observers := []any{
-		&observer1,
-		&observer2,
-	}
-	pubsubs[&subject] = observers
+type PubSub interface {
+	Subscribe(func(source any, item any))
+	Publish(item any)
+}
+
+type PubSubC struct {
+	pubsubs map[any][]any
+}
+
+func (p *PubSubC) Subscribe(item any) {
+
 }

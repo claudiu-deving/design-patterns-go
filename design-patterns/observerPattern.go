@@ -2,35 +2,23 @@
 	[31.03.2024]
 	This seems to be working fine, I guess a more robust implementation would require some error checking.
 	I will revise by implementing an Event Aggregator using channels
+
+	[01.04.2024]
+	I added error handling in some parts, while also creating some unit testing
+	The RemoveAt func should be moved elsewhere
+	The next step would be to introduce generics so that the subject becomes the object passed by the event (which will be wrapped in a channel)
 */
 
 package designPatterns
 
 import (
-	"fmt"
-	"log"
+	"errors"
 )
-
-func ObserverPatternDemo() {
-	subject := NewSubject()
-	observer1 := NewObserver()
-	observer2 := NewObserver()
-
-	subject.subjectState = "Some initial state"
-	fmt.Printf("Obs1 state: %v\n", observer1.observerState)
-	fmt.Printf("Obs1 state: %v\n", observer2.observerState)
-	subject.Attach(&observer1)
-	subject.Attach(&observer2)
-	subject.subjectState = "Some changed state"
-	subject.Notify()
-	fmt.Printf("Obs1 state: %v\n", observer1.observerState)
-	fmt.Printf("Obs1 state: %v\n", observer2.observerState)
-}
 
 type Subject interface {
 	Attach(Observer)
-	Dettach(Observer)
-	Notify()
+	Dettach(Observer) error
+	Notify() []error
 }
 
 type ConcreteSubject struct {
@@ -42,18 +30,28 @@ func NewSubject() ConcreteSubject {
 	return ConcreteSubject{}
 }
 
-func (c *ConcreteSubject) Notify() {
+func (c *ConcreteSubject) Notify() []error {
+	errors := []error{}
 	for i := 0; i < len(c.observers); i++ {
 		var observer Observer = c.observers[i]
-		observer.Update(c.subjectState)
+		err := observer.Update(c.subjectState)
+		if err == nil {
+			errors = append(errors, err)
+		}
 	}
+	if len(errors) > 0 {
+		return errors
+	} else {
+		return nil
+	}
+
 }
 
 func (c *ConcreteSubject) Attach(observer Observer) {
 	c.observers = append(c.observers, observer)
 }
 
-func (c *ConcreteSubject) Dettach(observer Observer) {
+func (c *ConcreteSubject) Dettach(observer Observer) error {
 	index := -1
 	for i := 0; i < len(c.observers); i++ {
 		if c.observers[i] == observer {
@@ -61,9 +59,11 @@ func (c *ConcreteSubject) Dettach(observer Observer) {
 		}
 	}
 	if index == -1 {
-		log.Fatal("The observer was not found in the list")
+		return errors.New("the observer was not found in the list")
 	}
-	RemoveAt(c.observers, index)
+	c.observers = RemoveAt(c.observers, index)
+
+	return nil
 }
 
 func RemoveAt[T any](slice []T, index int) []T {
@@ -78,7 +78,7 @@ func RemoveAt[T any](slice []T, index int) []T {
 }
 
 type Observer interface {
-	Update(any)
+	Update(any) error
 }
 
 type ConcreteObserver struct {
@@ -89,6 +89,10 @@ func NewObserver() ConcreteObserver {
 	return ConcreteObserver{}
 }
 
-func (obs *ConcreteObserver) Update(subjectState any) {
+func (obs *ConcreteObserver) Update(subjectState any) error {
+	if obs == nil {
+		return errors.New("the observer is null")
+	}
 	obs.observerState = subjectState
+	return nil
 }
